@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"todo/config"
+	"todo/database"
 
 	"database/sql"
 
-	"main.go/config"
-	"main.go/database"
 	_ "modernc.org/sqlite"
 
 	"github.com/joho/godotenv"

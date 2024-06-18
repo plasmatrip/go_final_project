@@ -4,8 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
-
-	"main.go/config"
+	"todo/config"
 )
 
 var schema = `
