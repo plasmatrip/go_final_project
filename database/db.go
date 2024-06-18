@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"go_final_project/config"
+	"main.go/config"
 )
 
 var schema = `

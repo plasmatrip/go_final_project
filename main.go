@@ -7,10 +7,9 @@ import (
 
 	"database/sql"
 
+	"main.go/config"
+	"main.go/database"
 	_ "modernc.org/sqlite"
-
-	"go_final_project/config"
-	"go_final_project/database"
 
 	"github.com/joho/godotenv"
 )
