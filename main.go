@@ -10,6 +10,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	"go_final_project/config"
+	"go_final_project/database"
 
 	"github.com/joho/godotenv"
 )
@@ -33,7 +34,7 @@ func main() {
 	}
 	defer db.Close()
 
-	Check(db)
+	database.Check(db)
 
 	mux := http.NewServeMux()
 

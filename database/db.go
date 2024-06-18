@@ -1,11 +1,11 @@
-package main
+package database
 
 import (
 	"database/sql"
 	"log"
 	"os"
 
-	"github.com/plasmatrip/go_final_project/config"
+	"go_final_project/config"
 )
 
 var schema = `
