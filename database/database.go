@@ -8,7 +8,7 @@ import (
 	"todo/model"
 )
 
-var db *sql.DB
+// var db *sql.DB
 
 var schema = `
 	CREATE TABLE scheduler (
@@ -21,12 +21,20 @@ var schema = `
 	CREATE INDEX schedule_date ON scheduler (date);
 `
 
-func Open() {
+type Todo struct {
+	db *sql.DB
+}
+
+func NewToDo(db *sql.DB) *Todo {
+	return &Todo{db: db}
+}
+
+func Open() *sql.DB {
 	var err error
-	db, err = sql.Open("sqlite", config.DBFile)
+	db, err := sql.Open("sqlite", config.DBFile)
 	if err != nil {
 		log.Fatal(err)
-		return
+		return nil
 	}
 	if _, err := os.Stat(config.DBFile); err != nil {
 		if _, err := os.Stat(config.DBDir); err != nil {
@@ -39,14 +47,15 @@ func Open() {
 			log.Panic(err)
 		}
 	}
+	return db
 }
 
-func Close() {
-	db.Close()
+func (d *Todo) Close() {
+	d.Close()
 }
 
-func Insert(t model.Task) (int, error) {
-	res, err := db.Exec("INSERT INTO scheduler (date, title, comment, repeat) VALUES (:date, :title, :comment, :repeat)",
+func (d *Todo) Insert(t model.Task) (int, error) {
+	res, err := d.db.Exec("INSERT INTO scheduler (date, title, comment, repeat) VALUES (:date, :title, :comment, :repeat)",
 		sql.Named("date", t.Date),
 		sql.Named("title", t.Title),
 		sql.Named("comment", t.Comment),
@@ -65,15 +74,34 @@ func Insert(t model.Task) (int, error) {
 	return int(id), nil
 }
 
-func GetTasks() ([]model.Task, error) {
+func (d *Todo) GetTasks() ([]model.Task, error) {
 	var res []model.Task
 
-	rows, err := db.Query("SELECT * FROM scheduler LIMIT 25")
+	rows, err := d.db.Query("SELECT * FROM scheduler LIMIT 25")
 	if err != nil {
 		log.Println(err)
-		return res, err
+		return []model.Task{}, err
 	}
 	defer rows.Close()
+
+	for rows.Next() {
+		t := model.Task{}
+		err := rows.Scan(&t.Id, &t.Date, &t.Title, &t.Comment, &t.Repeat)
+		if err != nil {
+			log.Printf("ошибка получения данных: %s", err.Error())
+			return []model.Task{}, err
+		}
+		res = append(res, t)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("ошибка итерации: %s", err.Error())
+		return []model.Task{}, err
+	}
+
+	if res == nil {
+		res = []model.Task{}
+	}
 
 	return res, nil
 }

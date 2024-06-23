@@ -18,6 +18,10 @@ type Task struct {
 	Repeat  string `json:"repeat"`
 }
 
+type Tasks struct {
+	Tasks []Task `json:"tasks"`
+}
+
 func (t Task) String() string {
 	return fmt.Sprintf("id=%s date=%s title=%s comment=%s repeat=%s", t.Id, t.Date, t.Title, t.Comment, t.Repeat)
 }

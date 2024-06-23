@@ -18,15 +18,17 @@ func main() {
 
 	config.LoadEnv()
 
-	database.Open()
-	defer database.Close()
+	todo := database.NewToDo(database.Open())
+	defer todo.Close()
 
 	r := chi.NewRouter()
 
+	todoHandlers := controller.NewTodoHandlers(todo)
+
 	r.Mount("/", http.FileServer(http.Dir(config.WebDir)))
 	r.Get("/api/nextdate", controller.HandleNextDate)
-	r.Post("/api/task", controller.HandleAddTask)
-	r.Get("/api/task", controller.HandleGetTasks)
+	r.Post("/api/task", todoHandlers.HandleAddTask)
+	r.Get("/api/tasks", todoHandlers.HandleGetTasks)
 
 	err := http.ListenAndServe(":"+config.Port, r)
 	if err != nil {

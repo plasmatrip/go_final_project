@@ -14,6 +14,14 @@ import (
 	"todo/service"
 )
 
+type TodoHandlers struct {
+	Todo *database.Todo
+}
+
+func NewTodoHandlers(todo *database.Todo) *TodoHandlers {
+	return &TodoHandlers{Todo: todo}
+}
+
 func HandleNextDate(w http.ResponseWriter, r *http.Request) {
 	log.Printf("получен запрос [%s]", r.RequestURI)
 
@@ -43,7 +51,7 @@ func HandleNextDate(w http.ResponseWriter, r *http.Request) {
 	log.Printf("отправлен ответ [%s]", nextDate)
 }
 
-func HandleAddTask(w http.ResponseWriter, r *http.Request) {
+func (h *TodoHandlers) HandleAddTask(w http.ResponseWriter, r *http.Request) {
 	var task model.Task
 	var buf bytes.Buffer
 
@@ -95,7 +103,7 @@ func HandleAddTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id, err := database.Insert(task)
+	id, err := h.Todo.Insert(task)
 	if err != nil {
 		log.Println(err.Error())
 		service.ErrorResponse(w, "внутренняя ощибка сервера", err)
@@ -120,6 +128,26 @@ func HandleAddTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleGetTasks(w http.ResponseWriter, r *http.Request) {
+func (h *TodoHandlers) HandleGetTasks(w http.ResponseWriter, r *http.Request) {
+	// var tasks []model.Task
+	tasks, err := h.Todo.GetTasks()
+	if err != nil {
+		log.Printf("ошибка получения данных: %s", err.Error())
+		service.ErrorResponse(w, "ошибка получения данных", err)
+	}
 
+	foundTasks, err := json.Marshal(model.Tasks{Tasks: tasks})
+	if err != nil {
+		log.Println(err.Error())
+		service.ErrorResponse(w, "ошибка сериализации данных", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write(foundTasks)
+	if err != nil {
+		log.Println(err.Error())
+		service.ErrorResponse(w, "внутренняя ошибка сервера", err)
+	}
 }
