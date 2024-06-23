@@ -2,7 +2,10 @@ module todo
 
 go 1.22.3
 
-require modernc.org/sqlite v1.30.1
+require (
+	github.com/go-chi/chi/v5 v5.0.14
+	modernc.org/sqlite v1.30.1
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
