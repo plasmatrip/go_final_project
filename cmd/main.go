@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
-	"todo/config"
-	"todo/controller"
-	"todo/database"
+	"todo/api"
+	"todo/configs"
+	"todo/repository"
 
 	_ "modernc.org/sqlite"
 
@@ -13,24 +13,28 @@ import (
 )
 
 func main() {
-	config.StartLog()
-	defer config.StopLog()
+	configs.StartLog()
+	defer configs.StopLog()
 
-	config.LoadEnv()
+	configs.LoadEnv()
 
-	db := database.NewToDo()
+	db := repository.NewToDo()
 	defer db.Close()
 
 	r := chi.NewRouter()
 
-	todoHandlers := controller.NewTodoHandlers(db)
+	todoHandlers := api.NewTodoHandlers(db)
 
-	r.Mount("/", http.FileServer(http.Dir(config.WebDir)))
+	r.Mount("/", http.FileServer(http.Dir(configs.WebDir)))
 	r.Get("/api/nextdate", todoHandlers.NextDate)
 	r.Post("/api/task", todoHandlers.AddTask)
-	r.Get("/api/tasks", todoHandlers.HandleGetTasks)
+	r.Get("/api/task", todoHandlers.GetTask)
+	r.Put("/api/task", todoHandlers.UpdateTask)
+	r.Get("/api/tasks", todoHandlers.GetTasks)
+	r.Post("/api/task/done", todoHandlers.TaskDone)
+	r.Delete("/api/task", todoHandlers.DeleteTask)
 
-	err := http.ListenAndServe(":"+config.Port, r)
+	err := http.ListenAndServe(":"+configs.Port, r)
 	if err != nil {
 		log.Panic(err)
 	}

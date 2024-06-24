@@ -1,4 +1,4 @@
-package controller
+package api
 
 import (
 	"encoding/json"
@@ -8,12 +8,12 @@ import (
 	"todo/service"
 )
 
-func (h *TodoHandlers) HandleGetTasks(w http.ResponseWriter, r *http.Request) {
-	// var tasks []model.Task
-	tasks, err := h.Todo.GetTasks()
+func (h *TodoHandlers) GetTasks(w http.ResponseWriter, r *http.Request) {
+	tasks, err := h.Repo.GetTasks()
 	if err != nil {
 		log.Printf("ошибка получения данных: %s", err.Error())
 		service.ErrorResponse(w, "ошибка получения данных", err)
+		return
 	}
 
 	foundTasks, err := json.Marshal(model.Tasks{Tasks: tasks})
@@ -29,5 +29,6 @@ func (h *TodoHandlers) HandleGetTasks(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err.Error())
 		service.ErrorResponse(w, "внутренняя ошибка сервера", err)
+		return
 	}
 }

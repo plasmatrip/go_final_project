@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,14 +10,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"todo/config"
+	"todo/configs"
 	"todo/model"
 )
 
 func NextDate(now time.Time, date string, repeat string) (string, error) {
 	var nextDate time.Time
 
-	startDate, err := time.Parse(config.DateLayout, date)
+	startDate, err := time.Parse(configs.DateLayout, date)
 	if err != nil {
 		log.Printf("%s [date=%s]", err.Error(), date)
 		return "", fmt.Errorf("переданное значение не может быть преобразовано в дату")
@@ -67,11 +68,11 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		return "", fmt.Errorf("неподдерживаемый формат")
 	}
 
-	return nextDate.Format(config.DateLayout), nil
+	return nextDate.Format(configs.DateLayout), nil
 }
 
 func ErrorResponse(w http.ResponseWriter, message string, err error) {
-	error := model.Error{Message: fmt.Errorf("%s, %s", message, err.Error()).Error()}
+	error := model.Error{Message: fmt.Errorf("%s [%s]", message, err.Error()).Error()}
 	resp, err := json.Marshal(error)
 	if err != nil {
 		log.Println(err.Error())
@@ -85,4 +86,39 @@ func ErrorResponse(w http.ResponseWriter, message string, err error) {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func CheckTask(task *model.Task) error {
+	if len(task.Id) > 0 {
+		if _, err := strconv.Atoi(task.Id); err != nil {
+			return errors.New("идентификатор не может быть преобразован в число")
+		}
+	}
+
+	if len(task.Title) == 0 {
+		return errors.New("заголовок задачи не может быть пустым")
+	}
+
+	now := time.Now()
+
+	if len(task.Date) == 0 {
+		task.Date = now.Format(configs.DateLayout)
+	} else {
+		date, err := time.Parse(configs.DateLayout, task.Date)
+		if err != nil {
+			return errors.New("дата представлена в формате, отличном от 20060102")
+		}
+
+		if date.Before(now) {
+			task.Date = now.Format(configs.DateLayout)
+		}
+	}
+
+	if len(task.Repeat) > 0 {
+		_, err := NextDate(now, task.Date, task.Repeat)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

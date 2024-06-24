@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"log"
@@ -49,6 +49,11 @@ func LoadEnv() {
 }
 
 func StartLog() {
+	if _, err := os.Stat("../log/"); err != nil {
+		if err := os.Mkdir("../log/", 0755); err != nil {
+			log.Fatal("не удалось создать каталог для log-файла", err)
+		}
+	}
 	logFile, err := os.OpenFile("../log/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("не удалось открыть файл ", err)
