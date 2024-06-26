@@ -52,6 +52,11 @@ func LoadEnv() {
 	if !exists {
 		log.Fatal("не найдена переменная окружения TODO_SEARCH_LAYOUT")
 	}
+
+	_, exists = os.LookupEnv("TODO_PASSWORD")
+	if !exists {
+		log.Fatal("не найдена переменная окружения TODO_PASSWORD")
+	}
 }
 
 func StartLog() {

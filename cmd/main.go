@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"todo/api"
+	"todo/api/middleware"
 	"todo/configs"
 	"todo/repository"
 
@@ -27,12 +28,13 @@ func main() {
 
 	r.Mount("/", http.FileServer(http.Dir(configs.WebDir)))
 	r.Get("/api/nextdate", todoHandlers.NextDate)
-	r.Post("/api/task", todoHandlers.AddTask)
-	r.Get("/api/task", todoHandlers.GetTask)
-	r.Put("/api/task", todoHandlers.UpdateTask)
-	r.Get("/api/tasks", todoHandlers.GetTasks)
-	r.Post("/api/task/done", todoHandlers.TaskDone)
-	r.Delete("/api/task", todoHandlers.DeleteTask)
+	r.Post("/api/task", middleware.Auth(todoHandlers.AddTask))
+	r.Get("/api/task", middleware.Auth(todoHandlers.GetTask))
+	r.Put("/api/task", middleware.Auth(todoHandlers.UpdateTask))
+	r.Get("/api/tasks", middleware.Auth(todoHandlers.GetTasks))
+	r.Post("/api/task/done", middleware.Auth(todoHandlers.TaskDone))
+	r.Delete("/api/task", middleware.Auth(todoHandlers.DeleteTask))
+	r.Post("/api/signin", todoHandlers.Login)
 
 	err := http.ListenAndServe(":"+configs.Port, r)
 	if err != nil {
