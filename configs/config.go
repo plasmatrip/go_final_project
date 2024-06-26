@@ -12,6 +12,7 @@ var DBDir string
 var WebDir string
 var Port string
 var DateLayout string
+var SearchLayout string
 
 var logFile *os.File
 
@@ -45,6 +46,11 @@ func LoadEnv() {
 	DateLayout, exists = os.LookupEnv("TODO_DATE_LAYOUT")
 	if !exists {
 		log.Fatal("не найдена переменная окружения TODO_DATE_LAYOUT")
+	}
+
+	SearchLayout, exists = os.LookupEnv("TODO_SEARCH_LAYOUT")
+	if !exists {
+		log.Fatal("не найдена переменная окружения TODO_SEARCH_LAYOUT")
 	}
 }
 

@@ -10,6 +10,8 @@ import (
 )
 
 func (h *TodoHandlers) TaskDone(w http.ResponseWriter, r *http.Request) {
+	log.Printf("получен запрос [%s]", r.RequestURI)
+
 	v := r.FormValue("id")
 	if len(v) == 0 {
 		log.Println("не указан идентификатор")

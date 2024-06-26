@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
 
 	"strconv"
 	"strings"
@@ -58,11 +59,130 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 			nextDate = nextDate.AddDate(1, 0, 0)
 		}
 	case 'w':
-		log.Printf("неподдерживаемый формат правила повторения задачи [repeat=%s]", repeat)
-		return "", fmt.Errorf("неподдерживаемый формат правила повторения задачи")
+		if len([]rune(repeat)) < 3 {
+			log.Printf("неправильный формат правила повторения задачи [repeat=%s]", repeat)
+			return "", fmt.Errorf("неправильный формат правила повторения задачи")
+		}
+
+		rule := strings.Split(repeat, " ")
+		weekdays := strings.Split(rule[1], ",")
+		targetDays := []time.Time{}
+
+		var add int
+		for _, weekday := range weekdays {
+			day, err := strconv.Atoi(weekday)
+			if err != nil {
+				log.Printf("недопустимый символ в интервале повторения задачи [repeat=%s]", repeat)
+				return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
+			}
+
+			if day > 7 {
+				log.Printf("недопустимое значени в интервале повторения задачи [repeat=%s]", repeat)
+				return "", fmt.Errorf("недопустимое значени в интервале повторения задачи")
+			}
+
+			if day <= int(now.Weekday()) {
+				add = 7 - int(now.Weekday()) + day
+			} else {
+				add = day - int(now.Weekday())
+			}
+			targetDays = append(targetDays, now.AddDate(0, 0, add))
+		}
+	outW:
+		for {
+			for _, weekday := range targetDays {
+				if nextDate.Compare(weekday) == 0 {
+					break outW
+				}
+			}
+			nextDate = nextDate.AddDate(0, 0, 1)
+		}
 	case 'm':
-		log.Printf("неподдерживаемый формат правила повторения задачи [repeat=%s]", repeat)
-		return "", fmt.Errorf("неподдерживаемый формат правила повторения задачи")
+		ruleD := []string{}
+		ruleM := []string{}
+		days := []int{}
+		months := []int{}
+
+		rule := strings.Split(repeat, " ")
+		if len(rule) < 2 {
+			log.Printf("неправильный формат правила повторения задачи [repeat=%s]", repeat)
+			return "", fmt.Errorf("неправильный формат правила повторения задачи")
+		}
+
+		for i, value := range rule {
+			switch i {
+			case 1:
+				//if len([]rune(value)) > 1 {
+				ruleD = append(ruleD, strings.Split(value, ",")...)
+				// } else {
+				// 	ruleD = append(ruleD, value)
+				// }
+			case 2:
+				//if len([]rune(value)) > 1 {
+				ruleM = append(ruleM, strings.Split(value, ",")...)
+				// } else {
+				// 	ruleM = append(ruleM, value)
+				// }
+			}
+		}
+
+		for _, d := range ruleD {
+			day, err := strconv.Atoi(d)
+			if err != nil {
+				log.Printf("недопустимый символ в интервале повторения задачи [repeat=%s]", repeat)
+				return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
+			}
+
+			if day > 31 || day == 0 || day < -31 {
+				log.Printf("недопустимое значени в интервале повторения задачи [repeat=%s]", repeat)
+				return "", fmt.Errorf("недопустимое значени в интервале повторения задачи")
+			}
+
+			days = append(days, day)
+		}
+		sort.Slice(days, func(i, j int) bool { return days[i] < days[j] })
+
+		for _, m := range ruleM {
+			month, err := strconv.Atoi(m)
+			if err != nil {
+				log.Printf("недопустимый символ в интервале повторения задачи [repeat=%s]", repeat)
+				return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
+			}
+
+			if month < 1 || month > 31 {
+				log.Printf("недопустимое значени в интервале повторения задачи [repeat=%s]", repeat)
+				return "", fmt.Errorf("недопустимое значени в интервале повторения задачи")
+			}
+
+			months = append(months, month)
+		}
+
+		targetDays := []time.Time{}
+		if len(months) == 0 {
+			for _, day := range days {
+				if day < 0 {
+					if now.AddDate(0, int(now.Month()), day).After(now) {
+						targetDays = append(targetDays, now.AddDate(0, int(now.Month()), day))
+					} else {
+						targetDays = append(targetDays, now.AddDate(0, int(now.Month())+1, day))
+					}
+				} else if day <= now.Day() {
+					targetDays = append(targetDays, time.Date(now.Year(), now.Month(), day, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0))
+				} else if day > now.Day() {
+					targetDays = append(targetDays, time.Date(now.Year(), now.Month(), day, 0, 0, 0, 0, time.UTC))
+				}
+			}
+		}
+
+	outM:
+		for {
+			for _, targetDay := range targetDays {
+				if nextDate.Compare(targetDay) == 0 {
+					break outM
+				}
+			}
+			nextDate = nextDate.AddDate(0, 0, 1)
+		}
 	default:
 		log.Printf("неподдерживаемый формат [repeat=%s]", repeat)
 		return "", fmt.Errorf("неподдерживаемый формат")
