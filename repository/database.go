@@ -35,12 +35,12 @@ func (d *Todo) Close() {
 
 func open() *sql.DB {
 	var err error
-	db, err := sql.Open("sqlite", configs.DBFile)
+	db, err := sql.Open("sqlite", configs.DBDir+configs.DBFile)
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
-	if _, err := os.Stat(configs.DBFile); err != nil {
+	if _, err := os.Stat(configs.DBDir + configs.DBFile); err != nil {
 		if _, err := os.Stat(configs.DBDir); err != nil {
 			if err := os.Mkdir(configs.DBDir, 0755); err != nil {
 				log.Fatal(err)

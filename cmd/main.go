@@ -14,10 +14,10 @@ import (
 )
 
 func main() {
+	configs.LoadEnv()
+
 	configs.StartLog()
 	defer configs.StopLog()
-
-	configs.LoadEnv()
 
 	db := repository.NewToDo()
 	defer db.Close()
@@ -40,4 +40,5 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
 }

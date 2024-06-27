@@ -19,8 +19,8 @@ var logFile *os.File
 func LoadEnv() {
 	var exists bool
 
-	if err := godotenv.Load("../.env"); err != nil {
-		log.Fatal("не найден .env файл")
+	if err := godotenv.Load("./.env"); err != nil {
+		log.Println("не найден .env файл")
 	}
 
 	WebDir, exists = os.LookupEnv("WEB_DIR")
@@ -57,19 +57,32 @@ func LoadEnv() {
 	if !exists {
 		log.Fatal("не найдена переменная окружения TODO_PASSWORD")
 	}
+
+	_, exists = os.LookupEnv("APP_LOG_DIR")
+	if !exists {
+		log.Fatal("не найдена переменная окружения APP_LOG_DIR")
+	}
+
+	_, exists = os.LookupEnv("APP_LOG_FILE")
+	if !exists {
+		log.Fatal("не найдена переменная окружения APP_LOG_FILE")
+	}
 }
 
 func StartLog() {
-	if _, err := os.Stat("../log/"); err != nil {
-		if err := os.Mkdir("../log/", 0755); err != nil {
-			log.Fatal("не удалось создать каталог для log-файла", err)
+	logDir, _ := os.LookupEnv("APP_LOG_DIR")
+	logFile, _ := os.LookupEnv("APP_LOG_FILE")
+
+	if _, err := os.Stat(logDir); err != nil {
+		if err := os.Mkdir(logDir, 0755); err != nil {
+			log.Println("не удалось создать каталог для log-файла", err)
 		}
 	}
-	logFile, err := os.OpenFile("../log/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	l, err := os.OpenFile(logDir+logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal("не удалось открыть файл ", err)
+		log.Println("не удалось открыть файл ", err)
 	}
-	log.SetOutput(logFile)
+	log.SetOutput(l)
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Println("логирование начато")
 }

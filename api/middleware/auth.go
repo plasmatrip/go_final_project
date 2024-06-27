@@ -3,6 +3,7 @@ package middleware
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,40 +20,47 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 
 			var cookieToken string
 			cookie, err := r.Cookie("token")
-			if err == nil {
-				cookieToken = cookie.Value
-			}
-
-			jwtToken, err := jwt.Parse(cookieToken, func(t *jwt.Token) (interface{}, error) {
-				return []byte(pass), nil
-			})
 			if err != nil {
-				log.Printf("неудалось преобразовать токен: %s\n", err)
+				AuthError(w, err)
 				return
+			} else {
+				cookieToken = cookie.Value
+				jwtToken, err := jwt.Parse(cookieToken, func(t *jwt.Token) (interface{}, error) {
+					return []byte(pass), nil
+				})
+				if err != nil {
+					AuthError(w, err)
+					return
+				}
+
+				res, ok := jwtToken.Claims.(jwt.MapClaims)
+				if !ok {
+					AuthError(w, fmt.Errorf("ошибка приведения значени поля Claims к типу wt.MapClaims"))
+					return
+				}
+
+				hashRaw := res["hash"]
+
+				tokenHash, ok := hashRaw.(string)
+				if !ok {
+					AuthError(w, fmt.Errorf("ошибка приведения значения хэша к типу string"))
+					return
+				}
+
+				if tokenHash != hashString {
+					AuthError(w, err)
+					return
+				}
+
+				log.Println("аутентификация пройдена")
 			}
-
-			res, ok := jwtToken.Claims.(jwt.MapClaims)
-			if !ok {
-				log.Println("неудалось привести к типу jwt.MapCalims")
-				return
-			}
-
-			hashRaw := res["hash"]
-
-			tokenHash, ok := hashRaw.(string)
-			if !ok {
-				log.Println("неудалось привести к типу string")
-				return
-			}
-
-			if tokenHash != hashString {
-				log.Println("хэши не совпали")
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
-				return
-			}
-
-			log.Println("аутентификация пройдена")
 		}
+
 		next(w, r)
 	}
+}
+
+func AuthError(w http.ResponseWriter, err error) {
+	log.Printf("ошибка аутентификации: %s", err)
+	http.Error(w, "Authentication required", http.StatusUnauthorized)
 }
