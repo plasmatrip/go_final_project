@@ -116,7 +116,7 @@ var Token = `"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJoYXNoIjoiNTk5NDQ3MWFiYjAxM
 $ docker build -t plasmatrip/todo --tag todo:v1 .
 ```
 
-Запуск готовго докер-образа выполняется командой
+Запуск готового докер-образа выполняется командой
 
 ```bash
 $ docker run -d -p 7540:7540 todo:v1
