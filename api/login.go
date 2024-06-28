@@ -8,10 +8,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"todo/model"
-	"todo/service"
 
 	"github.com/golang-jwt/jwt"
+
+	"todo/model"
+	"todo/service"
 )
 
 func (h *TodoHandlers) Login(w http.ResponseWriter, r *http.Request) {

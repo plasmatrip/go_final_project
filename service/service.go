@@ -7,10 +7,10 @@ import (
 	"log"
 	"net/http"
 	"sort"
-
 	"strconv"
 	"strings"
 	"time"
+
 	"todo/configs"
 	"todo/model"
 )
@@ -30,7 +30,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 
 	switch repeat[0] {
 	case 'd':
-		if len([]rune(repeat)) < 3 {
+		if len([]rune(repeat)) < configs.CorrectLenForDays {
 			log.Printf("неправильный формат правила повторения задачи [repeat=%s]", repeat)
 			return "", fmt.Errorf("неправильный формат правила повторения задачи")
 		}
@@ -43,7 +43,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 			return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
 		}
 
-		if days > 400 {
+		if days > configs.MaxDaysInRule {
 			log.Printf("превышен максимально допустимый интервал в правиле повторения задачи [repeat=%s]", repeat)
 			return "", fmt.Errorf("превышен максимально допустимый интервал в правиле повторения задачи")
 		}
@@ -56,7 +56,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 			referenceDate = referenceDate.AddDate(1, 0, 0)
 		}
 	case 'w':
-		if len([]rune(repeat)) < 3 {
+		if len([]rune(repeat)) < configs.CorrectLenForWeek {
 			log.Printf("неправильный формат правила повторения задачи [repeat=%s]", repeat)
 			return "", fmt.Errorf("неправильный формат правила повторения задачи")
 		}
@@ -73,13 +73,13 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 				return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
 			}
 
-			if day > 7 {
+			if day > configs.DayInWeek {
 				log.Printf("недопустимое значени в интервале повторения задачи [repeat=%s]", repeat)
 				return "", fmt.Errorf("недопустимое значени в интервале повторения задачи")
 			}
 
 			if day <= int(referenceDate.Weekday()) {
-				add = 7 - int(referenceDate.Weekday()) + day
+				add = configs.DayInWeek - int(referenceDate.Weekday()) + day
 			} else {
 				add = day - int(referenceDate.Weekday())
 			}
@@ -92,7 +92,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 					referenceDate = targetDays[i]
 					break outW
 				}
-				targetDays[i] = targetDays[i].AddDate(0, 0, 7)
+				targetDays[i] = targetDays[i].AddDate(0, 0, configs.DayInWeek)
 			}
 		}
 	case 'm':
@@ -102,7 +102,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		months := []int{}
 
 		rule := strings.Split(repeat, " ")
-		if len(rule) < 2 {
+		if len(rule) < configs.CorrectLenForMonth {
 			log.Printf("неправильный формат правила повторения задачи [repeat=%s]", repeat)
 			return "", fmt.Errorf("неправильный формат правила повторения задачи")
 		}
@@ -123,7 +123,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 				return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
 			}
 
-			if day > 31 || day == 0 || day < -2 {
+			if day > configs.MaxDaysInMonth || day == 0 || day < configs.MaxCountdownDays {
 				log.Printf("недопустимое значени в интервале повторения задачи [repeat=%s]", repeat)
 				return "", fmt.Errorf("недопустимое значени в интервале повторения задачи")
 			}
@@ -138,7 +138,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 				return "", fmt.Errorf("недопустимый символ в интервале повторения задачи")
 			}
 
-			if month < 1 || month > 31 {
+			if month < configs.MinMonth || month > configs.MaxMonth {
 				log.Printf("недопустимое значени в интервале повторения задачи [repeat=%s]", repeat)
 				return "", fmt.Errorf("недопустимое значени в интервале повторения задачи")
 			}

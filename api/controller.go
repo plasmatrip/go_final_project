@@ -5,9 +5,9 @@ import (
 )
 
 type TodoHandlers struct {
-	Repo *repository.Todo
+	Repo *repository.Repository
 }
 
-func NewTodoHandlers(todo *repository.Todo) *TodoHandlers {
+func NewTodoHandlers(todo *repository.Repository) *TodoHandlers {
 	return &TodoHandlers{Repo: todo}
 }

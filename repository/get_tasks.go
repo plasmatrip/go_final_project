@@ -3,14 +3,14 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
+
 	"todo/configs"
 	"todo/model"
 )
 
-func (d *Todo) GetTasks(search string) ([]model.Task, error) {
+func (d *Repository) GetTasks(search string) ([]model.Task, error) {
 	var res []model.Task
 	var rows *sql.Rows
 	var err error
@@ -29,9 +29,7 @@ func (d *Todo) GetTasks(search string) ([]model.Task, error) {
 		rows, err = d.db.Query("SELECT * FROM scheduler ORDER BY date LIMIT 25")
 	}
 
-	// rows, err := d.db.Query("SELECT * FROM scheduler ORDER BY date LIMIT 25")
 	if err != nil {
-		log.Println(err)
 		return []model.Task{}, err
 	}
 	defer rows.Close()
@@ -40,14 +38,12 @@ func (d *Todo) GetTasks(search string) ([]model.Task, error) {
 		t := model.Task{}
 		err := rows.Scan(&t.Id, &t.Date, &t.Title, &t.Comment, &t.Repeat)
 		if err != nil {
-			log.Printf("ошибка получения данных: %s", err.Error())
 			return []model.Task{}, err
 		}
 		res = append(res, t)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Printf("ошибка итерации: %s", err.Error())
 		return []model.Task{}, err
 	}
 

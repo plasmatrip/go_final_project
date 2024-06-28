@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+
 	"todo/configs"
 )
 
@@ -20,16 +21,15 @@ var schema = `
 	CREATE INDEX schedule_date ON scheduler (date);
 `
 
-type Todo struct {
+type Repository struct {
 	db *sql.DB
 }
 
-func NewToDo() *Todo {
-
-	return &Todo{db: open()}
+func NewToDo() *Repository {
+	return &Repository{db: open()}
 }
 
-func (d *Todo) Close() {
+func (d *Repository) Close() {
 	d.db.Close()
 }
 
